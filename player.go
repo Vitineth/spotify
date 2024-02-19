@@ -75,8 +75,18 @@ type RecentlyPlayedItem struct {
 	PlaybackContext PlaybackContext `json:"context"`
 }
 
+type RecentlyPlayedCursors struct {
+	After  string `json:"after"`
+	Before string `json:"before"`
+}
+
 type RecentlyPlayedResult struct {
-	Items []RecentlyPlayedItem `json:"items"`
+	Items   []RecentlyPlayedItem   `json:"items"`
+	Href    string                 `json:"href"`
+	Limit   int                    `json:"limit"`
+	Next    string                 `json:"next"`
+	Cursors *RecentlyPlayedCursors `json:"cursors"`
+	Total   int                    `json:"total"`
 }
 
 // PlaybackOffset can be specified either by track URI OR Position. If the
@@ -202,13 +212,13 @@ func (c *Client) PlayerCurrentlyPlaying(ctx context.Context, opts ...RequestOpti
 
 // PlayerRecentlyPlayed gets a list of recently-played tracks for the current
 // user. This call requires ScopeUserReadRecentlyPlayed.
-func (c *Client) PlayerRecentlyPlayed(ctx context.Context) ([]RecentlyPlayedItem, error) {
+func (c *Client) PlayerRecentlyPlayed(ctx context.Context) (*RecentlyPlayedResult, error) {
 	return c.PlayerRecentlyPlayedOpt(ctx, nil)
 }
 
 // PlayerRecentlyPlayedOpt is like PlayerRecentlyPlayed, but it accepts
 // additional options for sorting and filtering the results.
-func (c *Client) PlayerRecentlyPlayedOpt(ctx context.Context, opt *RecentlyPlayedOptions) ([]RecentlyPlayedItem, error) {
+func (c *Client) PlayerRecentlyPlayedOpt(ctx context.Context, opt *RecentlyPlayedOptions) (*RecentlyPlayedResult, error) {
 	spotifyURL := c.baseURL + "me/player/recently-played"
 	if opt != nil {
 		v := url.Values{}
@@ -232,7 +242,7 @@ func (c *Client) PlayerRecentlyPlayedOpt(ctx context.Context, opt *RecentlyPlaye
 		return nil, err
 	}
 
-	return result.Items, nil
+	return &result, nil
 }
 
 // TransferPlayback transfers playback to a new device and determine if
